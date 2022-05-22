@@ -10,11 +10,12 @@ router.get('/', (req, res) => {
     include: [
       {
         model: Category,
-        attributes:['id']
+        attributes:['category_name']
       },
       {
         model: Tag,
         through: ProductTag,
+        through:{ attributes: []},
         as: 'tag_names'
       },
      
@@ -40,19 +41,22 @@ router.get('/:id', (req, res) => {
     include: [
       {
         model: Category,
-        attributes:['id']
+        attributes:['category_name']
       },
       {
         model: Tag,
         through: ProductTag,
-        attributes: {exclude: 'id'},
-        through:{ attributes: []},
+        attributes: ['tag_name'],
+        through: {attributes: []},
         as: 'tag_names'
       },
      
     ],
   })
   .then(dbProductData => {
+    let productTags =     dbProductData[dbProductData.length -1].tag_names
+    const productTagIds = productTags.map(({ tag_name }) => tag_name);
+    console.log(productTagIds)
     res.json(dbProductData);
   })
   .catch(err => {
@@ -137,7 +141,16 @@ router.put('/:id', (req, res) => {
 });
 
 router.delete('/:id', (req, res) => {
-  // delete one product by its `id` value
+  Product.destroy({
+    where: {
+      id: req.params.id
+    }
+  })
+  .then(deletedProductData =>  res.json(deletedProductData))
+ .catch(err => {
+   console.log(err);
+   res.status(500).json(err);
+ })
 });
 
 module.exports = router;
